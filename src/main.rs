@@ -1,7 +1,8 @@
+use env_logger::Env;
 use webrtc::tcp::server::Server;
 
 #[tokio::main]
 async fn main() {
-    let server = Server::new();
-    server.run().await;
+    env_logger::Builder::from_env(Env::default().default_filter_or("debug")).init();
+    Server::new().run().await;
 }
