@@ -63,6 +63,7 @@ async fn process(socket: TcpStream, db: Db) {
             },
             None => ClientResp { aim_user: None },
         };
+        drop(db);
         debug!("{:?}", data);
         let data = serde_json::to_vec(&data).unwrap();
         send_to_client(&mut writer, &data)
