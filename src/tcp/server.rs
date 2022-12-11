@@ -3,14 +3,13 @@ use std::sync::Arc;
 
 use crate::consts::*;
 use crate::model::{ClientReq, ClientResp, DbData};
-use bytes::Bytes;
 use log::*;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt};
 use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::Mutex;
 
-type Db = Arc<Mutex<HashMap<i64, Bytes>>>;
+type Db = Arc<Mutex<HashMap<i64, Arc<DbData>>>>;
 
 pub struct Server {
     db: Db,
@@ -53,14 +52,14 @@ async fn process(socket: TcpStream, db: Db) {
         let db_data = DbData {
             id_data: client_msg.client,
         };
-        (*db).insert(from_id, Bytes::from(serde_json::to_vec(&db_data).unwrap()));
+        (*db).insert(from_id, Arc::new(db_data));
         let data = match (*db).get(&client_msg.aim_user) {
-            Some(bytes) => serde_json::from_slice::<DbData>(bytes).ok(),
+            Some(data) => Some(data),
             None => None,
         };
         let data = match data {
             Some(data) => ClientResp {
-                aim_user: Some(data.id_data),
+                aim_user: Some(data.id_data.clone()),
             },
             None => ClientResp { aim_user: None },
         };

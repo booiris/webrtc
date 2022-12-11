@@ -10,15 +10,15 @@ pub struct ClientReq {
 }
 
 #[derive(Clone, serde::Serialize, serde::Deserialize, Debug)]
+pub struct ClientResp {
+    pub aim_user: Option<IdStruct>,
+}
+
+#[derive(Clone, serde::Serialize, serde::Deserialize, Debug)]
 pub struct IdStruct {
     pub id: i64,
     pub ip: String,
     pub port: String,
-}
-
-#[derive(Clone, serde::Serialize, serde::Deserialize, Debug)]
-pub struct ClientResp {
-    pub aim_user: Option<IdStruct>,
 }
 
 #[derive(Clone, serde::Serialize, serde::Deserialize, Debug)]
