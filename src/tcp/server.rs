@@ -4,7 +4,7 @@ use std::sync::Arc;
 use crate::consts::*;
 use crate::model::{ClientReq, ClientResp, DbData};
 use log::*;
-use tokio::io::{AsyncBufReadExt, AsyncWriteExt};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::Mutex;
@@ -46,7 +46,7 @@ impl Server {
 async fn process(socket: TcpStream, db: Db) {
     let (reader, mut writer) = socket.into_split();
     let data = read_from_client(reader).await;
-    if let Some(client_msg) = serde_json::from_str::<ClientReq>(data.as_str()).ok() {
+    if let Some(client_msg) = serde_json::from_slice::<ClientReq>(&data).ok() {
         let mut db = db.lock().await;
         let from_id = client_msg.client.id;
         let db_data = DbData {
@@ -72,12 +72,12 @@ async fn process(socket: TcpStream, db: Db) {
     }
 }
 
-async fn read_from_client(reader: OwnedReadHalf) -> String {
+async fn read_from_client(reader: OwnedReadHalf) -> Vec<u8> {
     let mut buf_reader = tokio::io::BufReader::new(reader);
-    let mut buf = String::new();
-    let mut data = String::new();
+    let mut buffer = Vec::new();
+    let mut data = Vec::new();
     loop {
-        match buf_reader.read_line(&mut buf).await {
+        match buf_reader.read_buf(&mut buffer).await {
             Err(err) => {
                 error!("read from client error, err: {}", err);
                 break;
@@ -86,7 +86,7 @@ async fn read_from_client(reader: OwnedReadHalf) -> String {
                 break;
             }
             Ok(_) => {
-                data += buf.drain(..).as_str();
+                data.append(&mut buffer);
             }
         }
     }
