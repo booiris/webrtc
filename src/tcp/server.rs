@@ -9,7 +9,7 @@ use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::Mutex;
 
-type Db = Arc<Mutex<HashMap<i64, Arc<DbData>>>>;
+type Db = Arc<Mutex<HashMap<i64, DbData>>>;
 
 pub struct Server {
     db: Db,
@@ -52,7 +52,7 @@ async fn process(socket: TcpStream, db: Db) {
         let db_data = DbData {
             id_data: client_msg.client,
         };
-        (*db).insert(from_id, Arc::new(db_data));
+        (*db).insert(from_id, db_data);
         let data = match (*db).get(&client_msg.aim_user) {
             Some(data) => Some(data),
             None => None,
